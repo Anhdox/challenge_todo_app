@@ -1,6 +1,6 @@
 # challenge_todo_app
 
-A new Flutter project.
+A new Flutter project. A challenge from: https://pro.codewithandrea.com/get-started-flutter/intro/07-stmg-packages-app-architecture
 
 ## Getting Started
 
