@@ -68,7 +68,6 @@ class _MyHomePageState extends State<MyHomePage> {
       case TodoFilter.completed:
         return _todos.where((todo) => todo.isCompleted).toList();
       case TodoFilter.all:
-      default:
         return _todos;
     }
   }
@@ -159,8 +158,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   showSelectedIcon: false,
                   //
                   style: SegmentedButton.styleFrom(
-                    // Giữ lại fix viền từ lần trước để đảm bảo tính nhất quán
-                    side: BorderSide(color: theme.colorScheme.outline.withOpacity(0.5)),
+                    side: BorderSide(color: theme.colorScheme.outline.withAlpha(128)),
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(Radius.circular(50)),
                     ),
