@@ -1,19 +1,22 @@
-# Giai đoạn 0: Tài liệu Yêu cầu (Project Brief)
+# **Giai đoạn 0: Tài liệu Yêu cầu (Project Brief) \- v2 (Riverpod Refactor)**
 
-**1. Tên dự án:**
-Daily Challenge - TODO App
+1\. Tên dự án:  
+Daily Challenge \- TODO App (Riverpod Refactor)  
+2\. Mục tiêu (Objective):  
+Refactor (tái cấu trúc) ứng dụng TODO hiện có để đạt được kiến trúc tách biệt rõ ràng giữa Logic và UI, sử dụng thư viện Riverpod.  
+3\. Các tính năng chính (Key Features):  
+(Giữ nguyên các tính năng F-01 đến F-05 như phiên bản cũ)  
+**4\. Yêu cầu Kỹ thuật & Ràng buộc (Technical Requirements & Constraints):**
 
-**2. Mục tiêu (Objective):**
-Xây dựng một ứng dụng TODO list đơn giản, hoạt động đầy đủ trên một trang duy nhất, dựa trên hình ảnh mẫu.
-
-**3. Các tính năng chính (Key Features):**
-* **F-01 (Thêm Todo):** Người dùng có thể nhập văn bản vào một `TextField` và nhấn Enter (hoặc nút `Submit`) để thêm một "todo item" mới vào danh sách.
-* **F-02 (Xem danh sách Todo):** Hiển thị tất cả các todo item trong một danh sách cuộn (`ListView`).
-* **F-03 (Thay đổi trạng thái):** Người dùng có thể nhấn vào `Checkbox` bên cạnh mỗi item để đánh dấu là "hoàn thành" (completed) hoặc "chưa hoàn thành" (active).
-* **F-04 (Xem số lượng):** Hiển thị một dòng văn bản cho biết số lượng todo item *chưa hoàn thành* (active) còn lại. (Ví dụ: "2 items left").
-* **F-05 (Lọc danh sách):** Cung cấp 3 bộ lọc ("All", "Active", "Completed"). Nhấn vào một bộ lọc sẽ thay đổi danh sách todo được hiển thị cho phù hợp.
-
-**4. Ràng buộc & Phạm vi (Constraints & Scope):**
-* **C-01 (State Management):** BẮT BUỘC chỉ sử dụng `setState` và các `StatefulWidget` cơ bản của Flutter. KHÔNG được phép sử dụng bất kỳ thư viện quản lý state bên ngoài nào (Provider, Riverpod, Bloc, v.v.).
-* **C-02 (Persistence):** KHÔNG cần lưu trữ dữ liệu lâu dài (như Firebase hay local storage). State sẽ được reset mỗi khi khởi động lại ứng dụng.
-* **C-03 (UI):** Giao diện phải tuân thủ các nguyên tắc cơ bản của Material Design 3.
+* **C-01 (State Management Strategy):**
+    * Sử dụng thư viện **flutter\_riverpod** làm giải pháp quản lý state chính.
+    * **Lý do:** Tận dụng khả năng truy cập state toàn cục an toàn, dễ dàng kết hợp các state (composability), và khả năng test độc lập của Riverpod.
+* **C-02 (Architecture \- Separation of Concerns):**
+    * BẮT BUỘC tách biệt hoàn toàn **Logic Nghiệp vụ** (Business Logic) ra khỏi **Giao diện** (UI).
+    * **File Structure:** Code logic (quản lý danh sách, lọc, đếm) PHẢI được chuyển sang các file .dart riêng biệt (ví dụ: todo\_provider.dart).
+    * **UI Responsibility:** File main.dart và các Widget chỉ chịu trách nhiệm hiển thị và gọi hàm từ Provider. Tuyệt đối không viết logic xử lý dữ liệu bên trong Widget.
+* **C-03 (Clean Code):**
+    * Loại bỏ hoàn toàn việc sử dụng setState cho logic nghiệp vụ.
+    * UI phải là ConsumerWidget hoặc sử dụng Consumer để lắng nghe thay đổi từ Provider một cách tối ưu.
+* **C-04 (Persistence):**
+    * *(Chưa yêu cầu)* Dữ liệu vẫn reset khi khởi động lại ứng dụng.
