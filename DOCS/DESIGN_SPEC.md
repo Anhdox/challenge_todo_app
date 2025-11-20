@@ -1,92 +1,100 @@
-# Giai đoạn 1: Đặc tả Thiết kế (Design Specification)
+# Giai đoạn 1: Design Specification - High Level Design
 
-## 1. Thiết kế Mô hình Dữ liệu (Data Models)
+## 1. Data Modeling (Mô hình Dữ liệu)
 
-Để đáp ứng các yêu cầu `F-01`, `F-02`, `F-03`, chúng ta cần một `class` để định nghĩa một "Todo Item".
+Ở cấp độ High-Level Design, chúng ta xác định các thực thể và cấu trúc dữ liệu cần thiết mà không phụ thuộc vào ngôn ngữ cụ thể.
 
-```dart
-// Định nghĩa khuôn dữ liệu cho một Todo
-class TodoItem {
-  String title;     // Nội dung (ví dụ: "Buy cookies")
-  bool isCompleted; // Trạng thái (đã hoàn thành hay chưa)
+### Entities (Thực thể)
 
-  TodoItem({
-    required this.title,
-    this.isCompleted = false, // Mặc định là chưa hoàn thành
-  });
-}
-```
+**1. Todo Item (Công việc)**
+* **Mô tả:** Đại diện cho một đầu việc cụ thể trong danh sách.
+* **Thuộc tính (Attributes):**
+    * `id` (String/UUID): Mã định danh duy nhất. Bắt buộc có để phân biệt các task, hỗ trợ thao tác xóa/sửa chính xác.
+    * `title` (String): Nội dung công việc người dùng nhập.
+    * `isCompleted` (Boolean): Trạng thái hoàn thành của công việc. Mặc định là `false`.
+    * `createdAt` (DateTime/Timestamp): Thời điểm tạo task. (System Metadata dùng để sắp xếp hoặc log).
 
-Chúng ta cũng cần một enum (kiểu liệt kê) để định nghĩa các trạng thái lọc (filter).
+### Enums (Kiểu liệt kê)
 
-```dart
-// Định nghĩa các trạng thái lọc
-enum TodoFilter {
-  all,
-  active,
-  completed,
-}
-```
+**1. Todo Filter (Bộ lọc)**
+* **Mô tả:** Các trạng thái lọc để điều khiển danh sách hiển thị.
+* **Giá trị:**
+    * `All`: Hiển thị tất cả công việc.
+    * `Active`: Chỉ hiển thị công việc chưa hoàn thành.
+    * `Completed`: Chỉ hiển thị công việc đã hoàn thành.
 
-## 2. Thiết kế State (State Design)
-   Toàn bộ state của ứng dụng sẽ được quản lý bên trong _MyHomePageState (hoặc một tên tương tự).
+## 2. State Identification (Xác định Trạng thái)
 
-```dart
-// Phác thảo các biến State cần thiết
-class _MyHomePageState extends State<MyHomePage> {
+Dựa trên nguyên tắc **Single Source of Truth**, chúng ta phân loại dữ liệu như sau:
 
-    // === State Chính ===
-    
-    // [State-1] Danh sách "nguồn" (source of truth) chứa tất cả các todo
-    final List<TodoItem> _todos = [];
-    
-    // [State-2] Bộ lọc hiện tại đang được chọn
-    TodoFilter _currentFilter = TodoFilter.all;
-    
-    // [State-3] Dùng để điều khiển nội dung của TextField
-    final TextEditingController _textController = TextEditingController();
-    
-    // === State Phụ (Derived State) ===
-    // Đây là các giá trị được TÍNH TOÁN từ State Chính
-    
-    // [Derived-1] Danh sách todo đã được lọc (dùng để hiển thị lên UI)
-    List<TodoItem> get _filteredTodos {
-    // Logic lọc sẽ được viết ở đây
-    }
-    
-    // [Derived-2] Số lượng item còn lại (active)
-    int get _activeTodosCount {
-    // Logic đếm sẽ được viết ở đây
-    }
-    
-    // ... các hàm logic (methods) sẽ ở bên dưới ...
-}
-```
+### A. Core State (Nguồn Sự Thật)
+Dữ liệu gốc, bắt buộc phải lưu trữ và quản lý bởi `Notifier`.
 
-## 3. Thiết kế Logic (Methods Design)
+**1. `allTodos` (List<TodoItem>)**
+* Danh sách chứa toàn bộ các công việc.
+* Nơi quản lý: `todosProvider`.
 
-_MyHomePageState sẽ cần các hàm (methods) sau để cập nhật State (và gọi setState):
+**2. `currentFilter` (TodoFilter)**
+* Bộ lọc đang được chọn (All/Active/Completed).
+* Nơi quản lý: `filterProvider`.
 
-### void _addTodo(String title)
+### B. Derived State (Trạng thái Phái sinh)
+Dữ liệu được tính toán tự động từ Core State. Không lưu trữ biến riêng.
 
-Kích hoạt: Khi người dùng submit TextField (F-01).
+**1. `filteredTodos` (List<TodoItem>)**
+* **Input:** `allTodos` + `currentFilter`.
+* **Logic:** Trả về danh sách con dựa trên bộ lọc.
 
-Logic: Tạo một TodoItem mới, thêm vào danh sách _todos, và xóa nội dung _textController.
+**2. `activeCount` (int)**
+* **Input:** `allTodos`.
+* **Logic:** Đếm số phần tử có `isCompleted == false`.
 
-### void _toggleTodoStatus(int index)
+## 3. Actions & Business Rules (Hành động & Quy tắc - HLD)
 
-Kích hoạt: Khi người dùng nhấn Checkbox của một item (F-03).
+Xác định các hành động thay đổi Core State và các quy tắc nghiệp vụ (nếu có).
 
-Logic: Lấy index của item, đảo ngược giá trị isCompleted của _todos[index].
+### Actions
 
-### void _changeFilter(TodoFilter newFilter)
+**1. Add Todo**
+* **Input:** `title` (String).
+* **Target State:** `allTodos`.
+* **Business Rules:**
+    * **Validation:** Tiêu đề không được để trống (non-empty) hoặc chỉ chứa khoảng trắng.
+    * **Data Integrity:** Mỗi Todo phải có một ID duy nhất (Unique ID) được tạo bởi hệ thống.
+    * **Default State:** Todo mới mặc định có trạng thái chưa hoàn thành (`isCompleted = false`).
 
-Kích hoạt: Khi người dùng nhấn vào một trong 3 nút lọc (F-05).
+**2. Toggle Status**
+* **Input:** `id` (String).
+* **Target State:** `allTodos`.
+* **Description:** Tìm công việc theo `id` và đảo ngược trạng thái `isCompleted`.
 
-Logic: Cập nhật biến _currentFilter = newFilter;.
+**3. Set Filter**
+* **Input:** `filter` (TodoFilter).
+* **Target State:** `currentFilter`.
+* **Description:** Cập nhật bộ lọc hiển thị hiện tại.
 
-### void _dispose()
+## 4. UI Wiring (Đấu nối Giao diện - HLD)
 
-Kích hoạt: Khi widget bị hủy.
+Mô tả các thành phần giao diện chính và cách chúng kết nối với Logic/State.
+*(Các widget bố cục trung gian như Container, Padding, Column... để AI tự quyết định theo chuẩn Material 3)*.
 
-Logic: Hủy _textController để tránh rò rỉ bộ nhớ.
+### Màn hình chính: `TodoListScreen`
+
+**1. Zone 1: Header & Input**
+* **Todo Input** (`TextField`)
+    * ⚡ **Trigger:** `onSubmitted` -> Gọi Action **Add Todo**.
+
+**2. Zone 2: Dashboard**
+* **Stats Counter** (`Text`)
+    * 👂 **Watch:** `activeCountProvider`.
+* **Filter Bar** (`Row` chứa 3 nút)
+    * 👂 **Watch:** `filterProvider` (để highlight nút chọn).
+    * ⚡ **Trigger:** `onTap` -> Gọi Action **Set Filter**.
+
+**3. Zone 3: List Area**
+* **Todo List** (`ListView`)
+    * 👂 **Watch:** `filteredTodosProvider`.
+* **Todo Item** (`CheckboxListTile`)
+    * 👂 **Watch:** `isCompleted` (của item hiện tại).
+    * ⚡ **Trigger:** `onChanged` -> Gọi Action **Toggle Status**.
+
